@@ -2,7 +2,7 @@
 
 A simple Retrieval-Augmented Generation (RAG) pipeline that lets you ask questions about your own documents and get answers grounded in that content — no OpenAI key required, runs on Google's free Gemini API tier.
 
-This started as a fork of [pixegami's LangChain RAG tutorial](https://github.com/pixegami/langchain-rag-tutorial), originally built around OpenAI's models. I swapped it over to Google Gemini (for both embeddings and the chat model), fixed a handful of version-compatibility issues along the way, and made it document-agnostic — drop in whatever `.md` files you want, it doesn't care what's in them.
+It's built entirely on Google Gemini (for both embeddings and the chat model), with a handful of version-compatibility fixes baked in, and it's document-agnostic — drop in whatever `.md` files you want, it doesn't care what's in them.
 
 ## How it works
 

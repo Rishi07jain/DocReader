@@ -1,21 +1,15 @@
-# from langchain.document_loaders import DirectoryLoader
 from langchain_community.document_loaders import DirectoryLoader
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.schema import Document
-# from langchain.embeddings import OpenAIEmbeddings
-from langchain_openai import OpenAIEmbeddings
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_core.documents import Document
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_community.vectorstores import Chroma
-import openai 
+
 from dotenv import load_dotenv
 import os
 import shutil
 
 # Load environment variables. Assumes that project contains .env file with API keys
 load_dotenv()
-#---- Set OpenAI API key 
-# Change environment variable name from "OPENAI_API_KEY" to the name given in 
-# your .env file.
-openai.api_key = os.environ['OPENAI_API_KEY']
 
 CHROMA_PATH = "chroma"
 DATA_PATH = "data/books"
@@ -54,16 +48,26 @@ def split_text(documents: list[Document]):
     return chunks
 
 
+import time
+
 def save_to_chroma(chunks: list[Document]):
     # Clear out the database first.
     if os.path.exists(CHROMA_PATH):
         shutil.rmtree(CHROMA_PATH)
 
-    # Create a new DB from the documents.
-    db = Chroma.from_documents(
-        chunks, OpenAIEmbeddings(), persist_directory=CHROMA_PATH
-    )
-    db.persist()
+    embedding_function = GoogleGenerativeAIEmbeddings(model="gemini-embedding-001")
+
+    # Create an empty Chroma DB first.
+    db = Chroma(persist_directory=CHROMA_PATH, embedding_function=embedding_function)
+
+    # Process in small batches to respect free-tier rate limits (100 requests/min).
+    batch_size = 50
+    for i in range(0, len(chunks), batch_size):
+        batch = chunks[i:i + batch_size]
+        db.add_documents(batch)
+        print(f"Embedded batch {i // batch_size + 1} ({i + len(batch)}/{len(chunks)} chunks)")
+        time.sleep(20)  # pause to stay under free-tier rate limits
+
     print(f"Saved {len(chunks)} chunks to {CHROMA_PATH}.")
 
 

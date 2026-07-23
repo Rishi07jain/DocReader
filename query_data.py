@@ -1,9 +1,9 @@
 import argparse
 # from dataclasses import dataclass
 from langchain_community.vectorstores import Chroma
-from langchain_openai import OpenAIEmbeddings
-from langchain_openai import ChatOpenAI
-from langchain.prompts import ChatPromptTemplate
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_core.prompts import ChatPromptTemplate
 
 CHROMA_PATH = "chroma"
 
@@ -26,7 +26,7 @@ def main():
     query_text = args.query_text
 
     # Prepare the DB.
-    embedding_function = OpenAIEmbeddings()
+    embedding_function = GoogleGenerativeAIEmbeddings(model="gemini-embedding-001")
     db = Chroma(persist_directory=CHROMA_PATH, embedding_function=embedding_function)
 
     # Search the DB.
@@ -40,8 +40,8 @@ def main():
     prompt = prompt_template.format(context=context_text, question=query_text)
     print(prompt)
 
-    model = ChatOpenAI()
-    response_text = model.predict(prompt)
+    model = ChatGoogleGenerativeAI(model="gemini-2.5-flash")
+    response_text = model.invoke(prompt).content
 
     sources = [doc.metadata.get("source", None) for doc, _score in results]
     formatted_response = f"Response: {response_text}\nSources: {sources}"

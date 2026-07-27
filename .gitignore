@@ -1,4 +1,8 @@
 .env
-
-.DS_Storevenv/
+.DS_Store
+venv/
 __pycache__/
+chroma/
+chroma_*
+data/books/*
+!data/books/.gitkeep

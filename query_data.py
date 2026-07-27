@@ -3,11 +3,19 @@ from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
 from dotenv import load_dotenv
+import os
+import streamlit as st
 
 load_dotenv()
 
+if "GOOGLE_API_KEY" not in os.environ:
+    try:
+        os.environ["GOOGLE_API_KEY"] = st.secrets["GOOGLE_API_KEY"]
+    except (KeyError, FileNotFoundError):
+        pass
+
 CHROMA_PATH = "chroma"
-RELEVANCE_THRESHOLD = 0.5  # tuned for Gemini's embedding score range
+RELEVANCE_THRESHOLD = 0.4  # tuned for Gemini's embedding score range
 
 PROMPT_TEMPLATE = """
 Answer the question based only on the following context:
@@ -29,6 +37,9 @@ def get_answer(query_text: str):
     db = Chroma(persist_directory=CHROMA_PATH, embedding_function=embedding_function)
 
     results = db.similarity_search_with_relevance_scores(query_text, k=3)
+
+    for doc, score in results:
+        print(f"DEBUG Score: {score:.3f} | {doc.page_content[:80]}")
 
     if len(results) == 0 or results[0][1] < RELEVANCE_THRESHOLD:
         return None, None

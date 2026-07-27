@@ -2,7 +2,7 @@ from langchain_community.document_loaders import DirectoryLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
-from langchain_community.vectorstores import Chroma
+from langchain_chroma import Chroma
 
 from dotenv import load_dotenv
 import os
@@ -61,12 +61,12 @@ def save_to_chroma(chunks: list[Document]):
     db = Chroma(persist_directory=CHROMA_PATH, embedding_function=embedding_function)
 
     # Process in small batches to respect free-tier rate limits (100 requests/min).
-    batch_size = 50
+    batch_size = 25
     for i in range(0, len(chunks), batch_size):
         batch = chunks[i:i + batch_size]
         db.add_documents(batch)
         print(f"Embedded batch {i // batch_size + 1} ({i + len(batch)}/{len(chunks)} chunks)")
-        time.sleep(20)  # pause to stay under free-tier rate limits
+        time.sleep(30)  # stay safely under 100 requests/minute
 
     print(f"Saved {len(chunks)} chunks to {CHROMA_PATH}.")
 

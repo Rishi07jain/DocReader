@@ -3,6 +3,7 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_chroma import Chroma
+import tempfile
 
 from dotenv import load_dotenv
 import os
@@ -11,8 +12,8 @@ import shutil
 # Load environment variables. Assumes that project contains .env file with API keys
 load_dotenv()
 
-CHROMA_PATH = "chroma"
-DATA_PATH = "data/books"
+CHROMA_PATH = os.path.join(tempfile.gettempdir(), "docreader_chroma")
+DATA_PATH = os.path.join(tempfile.gettempdir(), "docreader_data")
 
 
 def main():

@@ -5,6 +5,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from dotenv import load_dotenv
 import os
 import streamlit as st
+import tempfile
 
 # Load environment variables from a local .env file (used when running locally).
 load_dotenv()
@@ -19,7 +20,7 @@ if "GOOGLE_API_KEY" not in os.environ:
         pass
 
 # Path to the local Chroma vector database created by create_database.py
-CHROMA_PATH = "chroma"
+CHROMA_PATH = os.path.join(tempfile.gettempdir(), "docreader_chroma")
 
 # Minimum similarity score a retrieved chunk must have to be considered
 # "relevant enough" to answer from. Tuned for Gemini's embedding score

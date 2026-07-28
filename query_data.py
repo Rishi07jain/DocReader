@@ -26,7 +26,7 @@ CHROMA_POINTER = os.path.join(tempfile.gettempdir(), "docreader_chroma_pointer.t
 # Minimum similarity score a retrieved chunk must have to be considered
 # "relevant enough" to answer from. Tuned for Gemini's embedding score
 # range (0.4-0.5) — this is NOT the same scale OpenAI's embeddings use.
-RELEVANCE_THRESHOLD = 0.5
+RELEVANCE_THRESHOLD = 0.4
 
 # Template used to build the final prompt sent to the chat model.
 # The model is instructed to answer strictly from the retrieved context,

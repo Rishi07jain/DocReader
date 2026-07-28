@@ -1,7 +1,8 @@
 import streamlit as st
 import os
-from query_data import get_answer
+from query_data import get_answer, get_chroma_path
 from create_database import generate_data_store, DATA_PATH
+
 
 st.set_page_config(
     page_title="DocReader",
@@ -72,7 +73,7 @@ for message in st.session_state.messages:
 query_text = st.chat_input("Ask something about your documents...")
 
 if query_text:
-    if not os.path.exists("chroma"):
+    if get_chroma_path() is None:
         st.warning("Upload a document and build the knowledge base first (see sidebar).")
     else:
         st.session_state.messages.append({"role": "user", "content": query_text})

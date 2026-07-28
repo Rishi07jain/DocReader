@@ -4,8 +4,8 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
 from dotenv import load_dotenv
 import os
-import streamlit as st
 import tempfile
+import streamlit as st
 
 # Load environment variables from a local .env file (used when running locally).
 load_dotenv()
@@ -19,12 +19,13 @@ if "GOOGLE_API_KEY" not in os.environ:
     except (KeyError, FileNotFoundError):
         pass
 
-# Path to the local Chroma vector database created by create_database.py
-CHROMA_PATH = os.path.join(tempfile.gettempdir(), "docreader_chroma")
+# Same pointer file used by create_database.py — always points to
+# whichever Chroma database directory is currently "live".
+CHROMA_POINTER = os.path.join(tempfile.gettempdir(), "docreader_chroma_pointer.txt")
 
 # Minimum similarity score a retrieved chunk must have to be considered
 # "relevant enough" to answer from. Tuned for Gemini's embedding score
-# range (0.4-0.5), which is NOT the same scale OpenAI's embeddings use.
+# range (0.4-0.5) — this is NOT the same scale OpenAI's embeddings use.
 RELEVANCE_THRESHOLD = 0.5
 
 # Template used to build the final prompt sent to the chat model.
@@ -39,6 +40,19 @@ Answer the question based only on the following context:
 
 Answer the question based on the above context: {question}
 """
+
+
+def get_chroma_path():
+    """
+    Reads the pointer file to find the path of the current active
+    Chroma database. Returns None if no database has been built yet.
+    """
+    if os.path.exists(CHROMA_POINTER):
+        with open(CHROMA_POINTER) as f:
+            path = f.read().strip()
+            if os.path.exists(path):
+                return path
+    return None
 
 
 @st.cache_resource
@@ -63,20 +77,22 @@ def get_chat_model():
 def get_answer(query_text: str):
     """
     Runs the full RAG pipeline for a given question:
-    1. Embed the question
-    2. Retrieve the most relevant chunks from the vector database
-    3. Feed those chunks + the question to the chat model as context
-    4. Return the generated answer and which source file(s) it came from
+    1. Look up the current Chroma database
+    2. Embed the question
+    3. Retrieve the most relevant chunks from the vector database
+    4. Feed those chunks + the question to the chat model as context
+    5. Return the generated answer and which source file(s) it came from
 
     Returns:
         (response_text, source_files) on success
-        (None, None) if no sufficiently relevant content was found
+        (None, None) if no database exists yet, or nothing relevant was found
     """
-    embedding_function = get_embedding_function()
+    chroma_path = get_chroma_path()
+    if chroma_path is None:
+        return None, None
 
-    # Connect to the existing Chroma database on disk (built separately
-    # by create_database.py or via the Streamlit upload feature).
-    db = Chroma(persist_directory=CHROMA_PATH, embedding_function=embedding_function)
+    embedding_function = get_embedding_function()
+    db = Chroma(persist_directory=chroma_path, embedding_function=embedding_function)
 
     # Retrieve the top 3 most semantically similar chunks to the question,
     # along with a relevance score for each.
